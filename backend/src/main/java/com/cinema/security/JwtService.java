@@ -7,19 +7,19 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
-@Component
-public class JwtUtils {
+@Service
+public class JwtService {
 
     private final SecretKey signingKey;
     private final long expirationMs;
 
-    public JwtUtils(
+    public JwtService(
             @Value("${app.jwt.secret}") String secret,
             @Value("${app.jwt.expiration-ms}") long expirationMs) {
         this.signingKey = resolveSigningKey(secret);
@@ -40,6 +40,11 @@ public class JwtUtils {
 
     public String extractEmail(String token) {
         return parseClaims(token).getSubject();
+    }
+
+    public Role extractRole(String token) {
+        String role = parseClaims(token).get("role", String.class);
+        return Role.valueOf(role);
     }
 
     public boolean isTokenValid(String token) {

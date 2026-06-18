@@ -17,9 +17,9 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-public class JwtAuthFilter extends OncePerRequestFilter {
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtUtils jwtUtils;
+    private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
     private final TokenBlacklistService tokenBlacklistService;
 
@@ -35,12 +35,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        if (tokenBlacklistService.isBlacklisted(token) || !jwtUtils.isTokenValid(token)) {
+        if (tokenBlacklistService.isBlacklisted(token) || !jwtService.isTokenValid(token)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String email = jwtUtils.extractEmail(token);
+        String email = jwtService.extractEmail(token);
         if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
             UsernamePasswordAuthenticationToken authentication =
