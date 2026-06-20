@@ -4,6 +4,7 @@ import com.cinema.model.MovieAvailabilityStatus;
 import jakarta.validation.constraints.NotNull;
 
 public record UpdateMovieStatusRequest(
-        @NotNull MovieAvailabilityStatus availabilityStatus
+        @NotNull(message = "Availability status is required")
+        MovieAvailabilityStatus availabilityStatus
 ) {
 }

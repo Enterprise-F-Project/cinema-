@@ -4,6 +4,7 @@ import com.cinema.model.RentalStatus;
 import jakarta.validation.constraints.NotNull;
 
 public record UpdateRentalStatusRequest(
-        @NotNull RentalStatus status
+        @NotNull(message = "Rental status is required")
+        RentalStatus status
 ) {
 }

@@ -5,10 +5,18 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 
 public record CreateLicenseRequest(
-        @NotNull LocalDate startDate,
-        @NotNull LocalDate endDate,
+        @NotNull(message = "Start date is required")
+        LocalDate startDate,
+
+        @NotNull(message = "End date is required")
+        LocalDate endDate,
+
         String terms,
-        @NotNull Long movieId,
-        @NotNull Long clientId
+
+        @NotNull(message = "Movie ID is required")
+        Long movieId,
+
+        @NotNull(message = "Client ID is required")
+        Long clientId
 ) {
 }
