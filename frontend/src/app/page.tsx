@@ -2,13 +2,14 @@ import Link from "next/link";
 import { ArrowRight, Clapperboard, FileKey, Film, Shield } from "lucide-react";
 
 import { siteConfig } from "@/config/site";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 const features = [
   {
@@ -47,13 +48,13 @@ export default function HomePage() {
             <span className="font-semibold">{siteConfig.name}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="ghost" render={<Link href="/login" />}>
+            <Link href="/login" className={cn(buttonVariants({ variant: "ghost" }))}>
               Sign in
-            </Button>
-            <Button render={<Link href="/register" />}>
+            </Link>
+            <Link href="/register" className={cn(buttonVariants())}>
               Get started
               <ArrowRight />
-            </Button>
+            </Link>
           </div>
         </div>
       </header>
@@ -70,12 +71,15 @@ export default function HomePage() {
             {siteConfig.tagline}
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Button size="lg" render={<Link href="/register" />}>
+            <Link href="/register" className={cn(buttonVariants({ size: "lg" }))}>
               Create account
-            </Button>
-            <Button size="lg" variant="outline" render={<Link href="/login" />}>
+            </Link>
+            <Link
+              href="/login"
+              className={cn(buttonVariants({ size: "lg", variant: "outline" }))}
+            >
               Sign in
-            </Button>
+            </Link>
           </div>
         </section>
 

@@ -70,15 +70,20 @@ public class JwtService {
 
     private SecretKey resolveSigningKey(String secret) {
         try {
-            return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
-        } catch (IllegalArgumentException ex) {
-            byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
-            if (keyBytes.length < 32) {
-                byte[] padded = new byte[32];
-                System.arraycopy(keyBytes, 0, padded, 0, keyBytes.length);
-                return Keys.hmacShaKeyFor(padded);
+            byte[] decoded = Decoders.BASE64.decode(secret);
+            if (decoded.length >= 32) {
+                return Keys.hmacShaKeyFor(decoded);
             }
-            return Keys.hmacShaKeyFor(keyBytes);
+        } catch (RuntimeException ex) {
+            // Not valid base64 — treat as a plain-text secret.
         }
+
+        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        if (keyBytes.length < 32) {
+            byte[] padded = new byte[32];
+            System.arraycopy(keyBytes, 0, padded, 0, keyBytes.length);
+            return Keys.hmacShaKeyFor(padded);
+        }
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }

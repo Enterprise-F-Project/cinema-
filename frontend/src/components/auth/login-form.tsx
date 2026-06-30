@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,7 +35,8 @@ export function LoginForm() {
     try {
       await login({ email, password });
       toast.success("Welcome back");
-      router.push("/dashboard");
+      const from = searchParams.get("from");
+      router.push(from && from !== "/login" ? from : "/dashboard");
     } catch (error) {
       const message =
         error instanceof ApiError ? error.message : "Unable to sign in";
