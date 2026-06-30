@@ -124,31 +124,24 @@ cd backend
 mvn spring-boot:run
 ```
 
-Backend runs at
+## Live Application
 
-```
-http://localhost:8080
-```
+Frontend
 
----
+http://196.189.188.234:3001/
 
-### 4. Run Frontend
+Backend API
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+http://196.189.188.234:8080/
 
-Frontend runs at
+Swagger UI
 
-```
-http://localhost:3001
+http://196.189.188.234:8080/swagger-ui/index.html
 ```
 
 ---
 
-## 🔐 Authentication
+##  Authentication
 
 Authentication is implemented using JSON Web Tokens (JWT).
 
@@ -163,18 +156,18 @@ All other API endpoints require a valid JWT Bearer Token.
 
 ---
 
-## 📖 API Documentation
+## API Documentation
 
 Swagger UI
 
 ```
-http://localhost:8080/swagger-ui/index.html
+http://196.189.188.234:8080/swagger-ui/index.html
 ```
 
 OpenAPI JSON
 
 ```
-http://localhost:8080/v3/api-docs
+http://196.189.188.234:8080/v3/api-docs
 ```
 
 ---
@@ -213,17 +206,7 @@ docker compose down
 
 ---
 
-## 📷 Screenshots
 
-Add screenshots of:
-
-- Login Page
-- Register Page
-- Dashboard
-- Movie Management
-- Client Management
-- Swagger UI
-- Docker Desktop
 
 ---
 
