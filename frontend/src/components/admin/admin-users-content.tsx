@@ -1,11 +1,13 @@
 "use client";
 
+import { Shield } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { DataTable, type Column } from "@/components/shared/data-table";
 import { LoadingState } from "@/components/shared/loading-state";
+import { RoleHero } from "@/components/shared/role-hero";
 import { Pagination } from "@/components/shared/pagination";
 import { ActiveBadge } from "@/components/shared/status-badge";
 import { Badge } from "@/components/ui/badge";
@@ -114,7 +116,15 @@ export function AdminUsersContent() {
         description="Review registered accounts and activate or deactivate user access."
       />
 
-      <div className="grid gap-4 rounded-xl border p-4 md:grid-cols-3">
+      <RoleHero
+        variant="admin"
+        icon={Shield}
+        badge="User administration"
+        title="Account management"
+        description="Review registered accounts, filter by role, and activate or deactivate user access."
+      />
+
+      <div className="filter-panel md:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor="user-role">Role</Label>
           <Select

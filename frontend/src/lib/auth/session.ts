@@ -35,6 +35,10 @@ export function setSession(session: AuthSession): void {
   document.cookie = `cinema_role=${session.role}; path=/; SameSite=Lax`;
 }
 
+function clearCookie(name: string): void {
+  document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
+}
+
 export function clearSession(): void {
   if (!isBrowser()) return;
 
@@ -42,8 +46,8 @@ export function clearSession(): void {
   localStorage.removeItem(ROLE_KEY);
   localStorage.removeItem(EXPIRES_KEY);
 
-  document.cookie = "cinema_token=; path=/; max-age=0";
-  document.cookie = "cinema_role=; path=/; max-age=0";
+  clearCookie("cinema_token");
+  clearCookie("cinema_role");
 }
 
 export function getAccessToken(): string | null {

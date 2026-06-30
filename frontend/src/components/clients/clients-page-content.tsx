@@ -1,12 +1,13 @@
 "use client";
 
-import { Pencil } from "lucide-react";
+import { Pencil, Users } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { DataTable, type Column } from "@/components/shared/data-table";
 import { LoadingState } from "@/components/shared/loading-state";
+import { RoleHero } from "@/components/shared/role-hero";
 import { Pagination } from "@/components/shared/pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -170,6 +171,18 @@ export function ClientsPageContent() {
             <Button onClick={openCreate}>Add client</Button>
           ) : undefined
         }
+      />
+
+      <RoleHero
+        icon={Users}
+        badge="Client organizations"
+        title={canCreate ? "Manage client network" : "Client directory"}
+        description={
+          canCreate
+            ? "Register and maintain cinema and streaming platform organizations."
+            : "View client organizations linked to your distribution agreements."
+        }
+        variant="distributor"
       />
 
       {isLoading ? (

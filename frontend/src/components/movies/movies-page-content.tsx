@@ -1,12 +1,13 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Film } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { DataTable, type Column } from "@/components/shared/data-table";
 import { LoadingState } from "@/components/shared/loading-state";
+import { RoleHero } from "@/components/shared/role-hero";
 import { Pagination } from "@/components/shared/pagination";
 import { MovieStatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
@@ -241,7 +242,19 @@ export function MoviesPageContent() {
         }
       />
 
-      <div className="grid gap-4 rounded-xl border p-4 md:grid-cols-4">
+      <RoleHero
+        icon={Film}
+        badge={canManage ? "Catalog management" : "Movie catalog"}
+        title={canManage ? "Manage your titles" : "Browse available movies"}
+        description={
+          canManage
+            ? "Add, edit, and control availability for titles in the distribution catalog."
+            : "Search and filter movies available for rental on the platform."
+        }
+        variant={role === "CLIENT" ? "client" : "distributor"}
+      />
+
+      <div className="filter-panel md:grid-cols-4">
         <div className="space-y-2">
           <Label htmlFor="title-filter">Title</Label>
           <Input

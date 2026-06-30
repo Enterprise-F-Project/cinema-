@@ -3,28 +3,34 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 import { siteConfig } from "@/config/site";
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import type { Role } from "@/types";
 
-const roleOptions: { value: Role; label: string }[] = [
-  { value: "CLIENT", label: "Client (Cinema / Platform)" },
-  { value: "DISTRIBUTOR", label: "Distributor" },
-  { value: "ADMIN", label: "Administrator" },
+const roleOptions: { value: Role; label: string; description: string }[] = [
+  {
+    value: "CLIENT",
+    label: "Client",
+    description: "Cinema / streaming platform",
+  },
+  {
+    value: "DISTRIBUTOR",
+    label: "Distributor",
+    description: "Movie rights holder",
+  },
+  {
+    value: "ADMIN",
+    label: "Administrator",
+    description: "Platform oversight",
+  },
 ];
 
 export function RegisterForm() {
@@ -54,75 +60,109 @@ export function RegisterForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle>Create your account</CardTitle>
-        <CardDescription>
+    <div className="glass-card animate-fade-up overflow-hidden p-0">
+      <div className="border-b border-border/60 bg-primary/5 px-6 py-8 dark:bg-primary/8">
+        <div className="mb-4 flex size-12 items-center justify-center rounded-xl bg-primary/15 ring-1 ring-primary/25">
+          <UserPlus className="size-5 text-primary" />
+        </div>
+        <h1 className="font-heading text-2xl font-semibold tracking-tight">
+          Create your account
+        </h1>
+        <p className="mt-1.5 text-sm text-muted-foreground">
           Join {siteConfig.name} to manage distribution and rentals.
-        </CardDescription>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="fullName">Full name</Label>
-            <Input
-              id="fullName"
-              required
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
-            />
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5 p-6">
+        <div className="space-y-2">
+          <Label htmlFor="fullName">Full name</Label>
+          <Input
+            id="fullName"
+            required
+            placeholder="Jane Cooper"
+            className={cn("h-10 bg-background/50 input-glow transition-all duration-300")}
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email address</Label>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            required
+            placeholder="you@cinema.com"
+            className={cn("h-10 bg-background/50 input-glow transition-all duration-300")}
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            type="password"
+            autoComplete="new-password"
+            minLength={8}
+            required
+            placeholder="Min. 8 characters"
+            className={cn("h-10 bg-background/50 input-glow transition-all duration-300")}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Select your role</Label>
+          <div className="grid gap-2">
+            {roleOptions.map((option) => (
+              <label
+                key={option.value}
+                className={cn(
+                  "flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-all duration-200",
+                  role === option.value
+                    ? "border-primary/50 bg-primary/10 shadow-[0_0_0_1px_oklch(0.72_0.13_72_/_30%)]"
+                    : "border-border/60 bg-background/30 hover:border-primary/30 hover:bg-primary/5",
+                )}
+              >
+                <input
+                  type="radio"
+                  name="role"
+                  value={option.value}
+                  checked={role === option.value}
+                  onChange={() => setRole(option.value)}
+                  className="accent-primary"
+                />
+                <div>
+                  <p className="text-sm font-medium">{option.label}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {option.description}
+                  </p>
+                </div>
+              </label>
+            ))}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              minLength={8}
-              required
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="role">Role</Label>
-            <select
-              id="role"
-              value={role}
-              onChange={(event) => setRole(event.target.value as Role)}
-              className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-            >
-              {roleOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </CardContent>
-        <CardFooter className="flex flex-col gap-4">
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? "Creating account..." : "Create account"}
-          </Button>
-          <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link href="/login" className="font-medium text-primary hover:underline">
-              Sign in
-            </Link>
-          </p>
-        </CardFooter>
+        </div>
+
+        <Button
+          type="submit"
+          className="hover-glow h-10 w-full"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Creating account..." : "Create account"}
+        </Button>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <Link
+            href="/login"
+            className="font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+          >
+            Sign in
+          </Link>
+        </p>
       </form>
-    </Card>
+    </div>
   );
 }

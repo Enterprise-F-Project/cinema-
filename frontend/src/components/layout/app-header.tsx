@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { LogOut, Menu } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 
 import { brandIcon, getNavItemsForRole } from "@/config/navigation";
@@ -14,9 +14,9 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -26,11 +26,18 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 const BrandIcon = brandIcon;
 
+const roleBadgeStyles: Record<string, string> = {
+  ADMIN: "bg-primary/15 text-primary border-primary/25",
+  DISTRIBUTOR: "bg-chart-2/15 text-chart-2 border-chart-2/25",
+  CLIENT: "bg-chart-3/15 text-chart-3 border-chart-3/25",
+};
+
 export function AppHeader() {
-  const router = useRouter();
+  const pathname = usePathname();
   const { role, logout, formatRole } = useAuth();
 
   if (!role) return null;
@@ -45,11 +52,11 @@ export function AppHeader() {
   async function handleLogout() {
     await logout();
     toast.success("Signed out successfully");
-    router.push("/login");
+    window.location.assign("/login");
   }
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/60 bg-background/80 px-4 backdrop-blur-xl md:px-6">
       <div className="flex items-center gap-3 md:hidden">
         <Sheet>
           <SheetTrigger
@@ -59,21 +66,31 @@ export function AppHeader() {
               </Button>
             }
           />
-          <SheetContent side="left" className="w-72 p-0">
-            <SheetHeader className="border-b p-6 text-left">
-              <SheetTitle className="flex items-center gap-2">
-                <BrandIcon className="size-5" />
-                {siteConfig.name}
+          <SheetContent side="left" className="w-72 border-sidebar-border bg-sidebar p-0">
+            <SheetHeader className="border-b border-sidebar-border p-5 text-left">
+              <SheetTitle className="flex items-center gap-2.5">
+                <div className="flex size-8 items-center justify-center rounded-lg bg-primary/15">
+                  <BrandIcon className="size-4 text-primary" />
+                </div>
+                <span className="font-heading">{siteConfig.name}</span>
               </SheetTitle>
             </SheetHeader>
-            <nav className="flex flex-col gap-1 p-4">
+            <nav className="flex flex-col gap-1 p-3">
               {navItems.map((item) => {
                 const Icon = item.icon;
+                const isActive =
+                  pathname === item.href ||
+                  pathname.startsWith(`${item.href}/`);
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted"
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+                      isActive
+                        ? "nav-item-active"
+                        : "hover:bg-sidebar-accent",
+                    )}
                   >
                     <Icon className="size-4" />
                     {item.title}
@@ -84,8 +101,8 @@ export function AppHeader() {
           </SheetContent>
         </Sheet>
         <div className="flex items-center gap-2">
-          <BrandIcon className="size-5" />
-          <span className="font-semibold">{siteConfig.name}</span>
+          <BrandIcon className="size-5 text-primary" />
+          <span className="font-heading font-semibold">{siteConfig.name}</span>
         </div>
       </div>
 
@@ -97,27 +114,38 @@ export function AppHeader() {
       </div>
 
       <div className="flex items-center gap-3">
-        <Badge variant="secondary" className="hidden sm:inline-flex">
+        <Badge
+          variant="outline"
+          className={cn("hidden sm:inline-flex border", roleBadgeStyles[role])}
+        >
           {formatRole(role)}
         </Badge>
 
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <Avatar>
-                  <AvatarFallback>{initials}</AvatarFallback>
-                </Avatar>
-              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Open account menu"
+                className="rounded-full ring-1 ring-border/60 transition-all hover:ring-primary/30"
+              />
             }
-          />
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
-              <LogOut />
-              Sign out
-            </DropdownMenuItem>
+          >
+            <Avatar className="size-8">
+              <AvatarFallback className="bg-primary/15 text-xs font-semibold text-primary">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Account</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => void handleLogout()}>
+                <LogOut />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

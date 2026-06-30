@@ -1,11 +1,13 @@
 "use client";
 
+import { Video } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { DataTable, type Column } from "@/components/shared/data-table";
 import { LoadingState } from "@/components/shared/loading-state";
+import { RoleHero } from "@/components/shared/role-hero";
 import { Pagination } from "@/components/shared/pagination";
 import { RentalStatusBadge } from "@/components/shared/status-badge";
 import { Button } from "@/components/ui/button";
@@ -198,7 +200,19 @@ export function RentalsPageContent() {
         }
       />
 
-      <div className="grid gap-4 rounded-xl border p-4 md:grid-cols-3">
+      <RoleHero
+        icon={Video}
+        badge="Rental workflow"
+        title={canCreate ? "Request and track rentals" : "Rental operations"}
+        description={
+          canCreate
+            ? "Submit rental requests for licensed movies and follow status updates."
+            : "Oversee rental requests and update fulfillment status across the platform."
+        }
+        variant="client"
+      />
+
+      <div className="filter-panel md:grid-cols-3">
         <div className="space-y-2">
           <Label htmlFor="rental-status">Status</Label>
           <Select
