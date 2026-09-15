@@ -174,17 +174,55 @@ http://196.189.188.234:8080/v3/api-docs
 
 ## 🧪 Testing
 
-API testing was performed using Postman.
+### Automated tests (Maven)
 
-Tested modules include:
+From the `backend/` directory:
 
-- Registration
-- Login
-- JWT Authentication
-- Movies
-- Clients
-- Rentals
-- Licenses
+```bash
+mvn clean test
+```
+
+This runs:
+
+- **Unit tests** (Phase 3 core business services — Mockito)
+- **Security integration tests** (Phase 4 — MockMvc + Testcontainers PostgreSQL)
+
+**Requirements for the full suite:**
+
+- Java 21
+- Docker Desktop running (needed for Testcontainers in security tests)
+- `backend/src/test/resources/docker-java.properties` sets `api.version=1.44` for Docker Engine 29+
+
+Expected green suite (after Phase 3 + Phase 4): **73 tests**, 0 failures.
+
+Coverage report (JaCoCo) is generated at:
+
+`backend/target/site/jacoco/index.html`
+
+### Manual API testing
+
+API testing was also performed using Postman for registration, login, JWT authentication, movies, clients, rentals, and licenses.
+
+---
+
+## Jenkins CI
+
+The repository root contains a `Jenkinsfile` for continuous integration.
+
+- The pipeline checks out the repository and runs `mvn -B clean test` in `backend/`.
+- The Jenkins agent must provide **JDK 21**, **Maven**, and **Docker** (Testcontainers starts PostgreSQL).
+- Failed tests fail the build; Surefire XML and JaCoCo HTML are archived when present.
+- Tool names expected in Jenkins: `JDK21` and `Maven` (configure matching tool installers, or adjust the `tools` block).
+
+Example local Jenkins-in-Docker approach (optional):
+
+```bash
+docker run -d --name jenkins-cinema -p 8081:8080 -p 50000:50000 ^
+  -v //var/run/docker.sock:/var/run/docker.sock ^
+  -v jenkins_home:/var/jenkins_home jenkins/jenkins:lts
+```
+
+Then create a Pipeline job pointed at this repository and the root `Jenkinsfile`.
 
 ---
 
@@ -216,7 +254,7 @@ docker compose down
 |------|----------------|
 | Zeru | Entities, Repositories, Services, Docker, Integration, Testing |
 | Mistre | DTOs, Controllers |
-| Hlina | Spring Security, JWT Authentication |
+| Hlina | Spring Security, JWT Authentication, Security tests, Jenkins CI |
 
 ---
 
