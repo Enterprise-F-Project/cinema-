@@ -199,6 +199,15 @@ Coverage report (JaCoCo) is generated at:
 
 `backend/target/site/jacoco/index.html`
 
+### Phase 5 Selenium E2E testing
+
+The project includes Selenium Page Object Model tests under `backend/src/test/java/com/cinema/selenium`.
+These tests exercise the browser flows for login, movie creation, license creation, and rental lifecycle transitions.
+
+Important environment note:
+
+Selenium E2E execution was not performed in this environment because Docker, the running frontend application, and a usable Chrome browser session were unavailable. Final E2E execution and verification must be performed on a machine with the complete application stack running.
+
 ### Manual API testing
 
 API testing was also performed using Postman for registration, login, JWT authentication, movies, clients, rentals, and licenses.
