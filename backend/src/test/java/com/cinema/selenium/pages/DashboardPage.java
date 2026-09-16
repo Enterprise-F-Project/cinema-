@@ -1,7 +1,9 @@
 package com.cinema.selenium.pages;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -35,7 +37,9 @@ public class DashboardPage {
 
     public void openNav(String navTitle) {
         By link = By.xpath("//aside//nav//a[normalize-space()='" + navTitle + "']");
-        wait.until(ExpectedConditions.elementToBeClickable(link)).click();
+        WebElement element = wait.until(ExpectedConditions.visibilityOfElementLocated(link));
+        // Native center-click does not reliably activate Next.js <Link> in this sidebar.
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", element);
     }
 
     public void goToMovies() {
@@ -54,8 +58,10 @@ public class DashboardPage {
     }
 
     public void logout() {
-        wait.until(ExpectedConditions.elementToBeClickable(accountMenuButton)).click();
-        wait.until(ExpectedConditions.elementToBeClickable(logOutItem)).click();
+        WebElement menu = wait.until(ExpectedConditions.elementToBeClickable(accountMenuButton));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", menu);
+        WebElement logout = wait.until(ExpectedConditions.elementToBeClickable(logOutItem));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", logout);
         wait.until(ExpectedConditions.urlContains("/login"));
     }
 }

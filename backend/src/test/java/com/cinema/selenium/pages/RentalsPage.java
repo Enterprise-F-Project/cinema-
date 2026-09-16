@@ -1,7 +1,9 @@
 package com.cinema.selenium.pages;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -33,17 +35,20 @@ public class RentalsPage {
     }
 
     public void requestRental(String movieTitle, String rentalDate, String returnDate) {
-        wait.until(ExpectedConditions.elementToBeClickable(requestRentalButton)).click();
+        WebElement openButton = wait.until(ExpectedConditions.elementToBeClickable(requestRentalButton));
+        // Native Selenium click does not reliably open this Sheet in headless Chrome.
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", openButton);
         wait.until(ExpectedConditions.visibilityOfElementLocated(movieSelect));
 
-        Select movies = new Select(wait.until(ExpectedConditions.visibilityOfElementLocated(movieSelect)));
-        wait.until(d -> movies.getOptions().stream().anyMatch(o -> o.getText().contains(movieTitle)));
-        movies.selectByVisibleText(movieTitle);
+        wait.until(d -> new Select(d.findElement(movieSelect)).getOptions().stream()
+                .anyMatch(o -> o.getText().contains(movieTitle)));
+        selectByVisibleText(movieSelect, movieTitle);
 
-        type(rentalStart, rentalDate);
-        type(rentalEnd, returnDate);
+        setFieldValue(rentalStart, rentalDate);
+        setFieldValue(rentalEnd, returnDate);
 
-        wait.until(ExpectedConditions.elementToBeClickable(submitRequest)).click();
+        WebElement submit = wait.until(ExpectedConditions.elementToBeClickable(submitRequest));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", submit);
         wait.until(ExpectedConditions.invisibilityOfElementLocated(movieSelect));
     }
 
@@ -62,7 +67,6 @@ public class RentalsPage {
     }
 
     public boolean hasStatusTextNearMovie(String movieTitle, String statusLabel) {
-        // Status badge text uses Title Case from shared status-badge (Requested/Active/Completed).
         By nearby = By.xpath(
                 "//*[contains(normalize-space(),'" + movieTitle + "')]/ancestor::*[self::tr or contains(@class,'grid') or contains(@class,'row')][1]"
                         + "//*[contains(normalize-space(),'" + statusLabel + "')]");
@@ -70,7 +74,6 @@ public class RentalsPage {
             wait.until(ExpectedConditions.visibilityOfElementLocated(nearby));
             return true;
         } catch (Exception ex) {
-            // Fallback: page-level text presence after reload/filter.
             return driver.getPageSource().contains(statusLabel)
                     && driver.getPageSource().contains(movieTitle);
         }
@@ -85,12 +88,42 @@ public class RentalsPage {
         By action = By.xpath(
                 "//*[contains(normalize-space(),'" + movieTitle + "')]/ancestor::*[self::tr or contains(@class,'grid') or contains(@class,'row')][1]"
                         + "//button[normalize-space()='" + buttonText + "']");
-        wait.until(ExpectedConditions.elementToBeClickable(action)).click();
+        WebElement button = wait.until(ExpectedConditions.elementToBeClickable(action));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", button);
     }
 
-    private void type(By locator, String value) {
-        var field = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
-        field.clear();
-        field.sendKeys(value);
+    private void setFieldValue(By locator, String value) {
+        WebElement field = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        ((JavascriptExecutor) driver).executeScript(
+                "const el = arguments[0];"
+                        + "const value = arguments[1];"
+                        + "const tag = el.tagName.toLowerCase();"
+                        + "let proto;"
+                        + "if (tag === 'textarea') proto = window.HTMLTextAreaElement.prototype;"
+                        + "else if (tag === 'select') proto = window.HTMLSelectElement.prototype;"
+                        + "else proto = window.HTMLInputElement.prototype;"
+                        + "const descriptor = Object.getOwnPropertyDescriptor(proto, 'value');"
+                        + "const last = el.value;"
+                        + "descriptor.set.call(el, value);"
+                        + "if (el._valueTracker) { el._valueTracker.setValue(last); }"
+                        + "el.dispatchEvent(new Event('input', { bubbles: true }));"
+                        + "el.dispatchEvent(new Event('change', { bubbles: true }));",
+                field,
+                value);
+    }
+
+    private void selectByVisibleText(By locator, String visibleText) {
+        WebElement select = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        String value = (String) ((JavascriptExecutor) driver).executeScript(
+                "const el = arguments[0];"
+                        + "const text = arguments[1];"
+                        + "const opt = Array.from(el.options).find(o => (o.textContent || '').trim() === text);"
+                        + "return opt ? opt.value : null;",
+                select,
+                visibleText);
+        if (value == null) {
+            throw new IllegalStateException("No <option> with visible text: " + visibleText);
+        }
+        setFieldValue(locator, value);
     }
 }

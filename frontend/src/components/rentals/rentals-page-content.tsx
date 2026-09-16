@@ -106,10 +106,15 @@ export function RentalsPageContent() {
     setIsSubmitting(true);
 
     try {
+      // Backend CreateRentalRequest expects LocalDateTime; <input type="date"> yields YYYY-MM-DD.
       await rentalsApi.create({
         movieId: Number(form.movieId),
-        rentalDate: form.rentalDate,
-        returnDate: form.returnDate,
+        rentalDate: form.rentalDate.includes("T")
+          ? form.rentalDate
+          : `${form.rentalDate}T00:00:00`,
+        returnDate: form.returnDate.includes("T")
+          ? form.returnDate
+          : `${form.returnDate}T00:00:00`,
       });
       toast.success("Rental requested");
       setSheetOpen(false);

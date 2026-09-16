@@ -1,7 +1,9 @@
 package com.cinema.selenium.pages;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -34,29 +36,27 @@ public class MoviesPage {
     }
 
     public void openAddMovieSheet() {
-        wait.until(ExpectedConditions.elementToBeClickable(addMovieButton)).click();
+        WebElement openButton = wait.until(ExpectedConditions.elementToBeClickable(addMovieButton));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", openButton);
         wait.until(ExpectedConditions.visibilityOfElementLocated(movieTitleInput));
     }
 
     public void createMovie(String title, String genre, String releaseDate, String durationMinutes, String description) {
         openAddMovieSheet();
-        type(movieTitleInput, title);
-        type(movieGenreInput, genre);
-        type(movieReleaseInput, releaseDate);
-        type(movieDurationInput, durationMinutes);
-        type(movieDescriptionInput, description);
+        setFieldValue(movieTitleInput, title);
+        setFieldValue(movieGenreInput, genre);
+        setFieldValue(movieReleaseInput, releaseDate);
+        setFieldValue(movieDurationInput, durationMinutes);
+        setFieldValue(movieDescriptionInput, description);
         wait.until(ExpectedConditions.elementToBeClickable(createMovieSubmit)).click();
         wait.until(ExpectedConditions.invisibilityOfElementLocated(movieTitleInput));
     }
 
     public void filterByTitle(String title) {
-        var field = wait.until(ExpectedConditions.visibilityOfElementLocated(titleFilter));
-        field.clear();
-        field.sendKeys(title);
+        setFieldValue(titleFilter, title);
     }
 
     public boolean isMovieVisibleInTable(String title) {
-        By rowText = By.xpath("//table//td[contains(.,'" + title + "')] | //*[contains(@class,'table') or self::table]//*[contains(normalize-space(),'" + title + "')]");
         try {
             wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//*[contains(normalize-space(),'" + title + "')]")));
             return driver.findElements(By.xpath("//*[contains(normalize-space(),'" + title + "')]")).stream()
@@ -66,9 +66,23 @@ public class MoviesPage {
         }
     }
 
-    private void type(By locator, String value) {
-        var field = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
-        field.clear();
-        field.sendKeys(value);
+    private void setFieldValue(By locator, String value) {
+        WebElement field = wait.until(ExpectedConditions.visibilityOfElementLocated(locator));
+        ((JavascriptExecutor) driver).executeScript(
+                "const el = arguments[0];"
+                        + "const value = arguments[1];"
+                        + "const tag = el.tagName.toLowerCase();"
+                        + "let proto;"
+                        + "if (tag === 'textarea') proto = window.HTMLTextAreaElement.prototype;"
+                        + "else if (tag === 'select') proto = window.HTMLSelectElement.prototype;"
+                        + "else proto = window.HTMLInputElement.prototype;"
+                        + "const descriptor = Object.getOwnPropertyDescriptor(proto, 'value');"
+                        + "const last = el.value;"
+                        + "descriptor.set.call(el, value);"
+                        + "if (el._valueTracker) { el._valueTracker.setValue(last); }"
+                        + "el.dispatchEvent(new Event('input', { bubbles: true }));"
+                        + "el.dispatchEvent(new Event('change', { bubbles: true }));",
+                field,
+                value);
     }
 }
