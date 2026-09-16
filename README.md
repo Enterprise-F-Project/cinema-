@@ -46,206 +46,187 @@ Each role has different permissions controlled using Spring Security and JWT.
 
 ### Frontend
 
-- React
-- JavaScript
+- Next.js / React
+- TypeScript
 - CSS
 
 ### Backend
 
-- Spring Boot
+- Spring Boot 3.5 / Java 21
 - Spring Security
 - JWT
 - Spring Data JPA
 - Hibernate
 - Maven
+- JaCoCo
 
 ### Database
 
 - PostgreSQL
 - Flyway Migration
 
-### DevOps
+### DevOps / CI
 
-- Docker
-- Docker Compose
+- Docker / Docker Compose
+- GitHub Actions (`.github/workflows/ci.yml`)
+- Jenkins (`Jenkinsfile` + optional Jenkins-in-Docker)
 
 ### Tools
 
-- Git
-- GitHub
+- Git / GitHub
 - Postman
 - Swagger OpenAPI
+- Selenium + Chrome (system tests)
 
 ---
 
-## 📂 Project Structure
+## How to run the application
 
-```
-Cinema Distribution System
-│
-├── frontend/
-│   ├── src/
-│   ├── public/
-│   └── package.json
-│
-├── backend/
-│   ├── src/main/java/
-│   ├── src/main/resources/
-│   ├── pom.xml
-│   └── docker-compose.yml
-│
-└── README.md
-```
+### Prerequisites
 
----
+- Java 21
+- Maven
+- Node.js 20+
+- Docker Desktop
 
-## ⚙️ Installation
-
-### 1. Clone Repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/Enterprise-F-Project/cinema-.git
+cd cinema-
 ```
 
----
-
-### 2. Start PostgreSQL using Docker
+### 2. Start PostgreSQL (Docker)
 
 ```bash
+cd backend
 docker compose up -d
 ```
 
----
+Postgres is published on host port **5433** (`cinema-postgres`).
 
-### 3. Run Backend
+### 3. Run the backend
 
 ```bash
 cd backend
 mvn spring-boot:run
 ```
 
-## Live Application
+- API: http://localhost:8080  
+- Swagger UI: http://localhost:8080/swagger-ui/index.html  
 
-Frontend
+If you see stale Lombok builder compile errors under OneDrive, use:
 
-http://196.189.188.234:3001/
-
-Backend API
-
-http://196.189.188.234:8080/
-
-Swagger UI
-
-http://196.189.188.234:8080/swagger-ui/index.html
+```bash
+mvn clean spring-boot:run -DskipTests
 ```
+
+If port 8080 is already in use, an older backend may already be running — check http://localhost:8080/actuator/health before starting another instance.
+
+### 4. Run the frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+- UI: http://localhost:3000  
+
+### Optional hosted demo URLs
+
+- Frontend: http://196.189.188.234:3001/  
+- Backend: http://196.189.188.234:8080/  
+- Swagger: http://196.189.188.234:8080/swagger-ui/index.html  
 
 ---
 
-##  Authentication
+## Authentication
 
-Authentication is implemented using JSON Web Tokens (JWT).
+Authentication uses JSON Web Tokens (JWT).
 
-Public endpoints
+Public endpoints:
 
 ```
 POST /api/auth/register
 POST /api/auth/login
 ```
 
-All other API endpoints require a valid JWT Bearer Token.
+All other API endpoints require a valid JWT Bearer token.
 
 ---
 
-## API Documentation
+## How to run the tests
 
-Swagger UI
+All automated tests live under `backend/src/test/java`. From `backend/`:
 
-```
-http://196.189.188.234:8080/swagger-ui/index.html
-```
-
-OpenAPI JSON
-
-```
-http://196.189.188.234:8080/v3/api-docs
-```
-
----
-
-## 🧪 Testing
-
-### Automated tests (Maven)
-
-From the `backend/` directory:
+### Full local suite (unit + validation + security + Selenium)
 
 ```bash
 mvn clean test
 ```
 
-This runs the full pyramid:
-
 | Level | Suite | Approx. count |
 |-------|--------|----------------|
-| Unit | Phase 3 service tests (Mockito) | 54+ |
-| Validation | Phase 6 controller Bean Validation (MockMvc) | 5 |
-| Integration / security | Phase 4 MockMvc + Testcontainers PostgreSQL | 19 |
-| System / E2E | Phase 5 Selenium Page Object Model | 3 |
+| Unit | Service tests (Mockito) | ~61 |
+| Validation | Controller Bean Validation / BVA–EP | 5 |
+| Integration / security | MockMvc + Testcontainers PostgreSQL | 19 |
+| System / E2E | Selenium Page Object Model | 3 |
 
-**Requirements for the full suite (including Selenium):**
+**Full suite (including Selenium) needs:** Java 21, Docker Desktop, backend on `http://localhost:8080`, frontend on `http://localhost:3000`, Google Chrome.  
+`backend/src/test/resources/docker-java.properties` sets `api.version=1.44` for Docker Engine 29+.
 
-- Java 21
-- Docker Desktop running (Testcontainers + app Postgres)
-- Backend on `http://localhost:8080`
-- Frontend on `http://localhost:3000`
-- Google Chrome (Selenium Manager resolves the driver)
-- `backend/src/test/resources/docker-java.properties` sets `api.version=1.44` for Docker Engine 29+
+### Run suites separately (PowerShell: quote `-Dtest=...`)
 
-CI pipelines exclude Selenium (no live frontend on the agent). Run Selenium locally:
-
-```bash
-mvn -B test -Dtest=CinemaSystemTest -Dselenium.headless=true
+```powershell
+mvn test "-Dtest=LicenseServiceTest,MovieServiceTest,RentalServiceTest,AuthServiceTest"
+mvn test "-Dtest=SecurityIntegrationTest"
+mvn test "-Dtest=AuthControllerValidationTest,CreateRequestDtoValidationTest"
+mvn test "-Dtest=CinemaSystemTest"
 ```
 
-Coverage report (JaCoCo):
+CI-style suite (no Selenium):
+
+```powershell
+mvn test "-Dtest=!CinemaSystemTest"
+```
+
+### Coverage (JaCoCo)
+
+After tests:
 
 `backend/target/site/jacoco/index.html`
 
 **Target:** ≥ **90%** branch coverage of core business services (`AuthService`, `RentalService`, `MovieService`, `LicenseService`).
 
-### Phase 6 — Validation / BVA / EP
+### Phase 6 — Validation / BVA / EP examples
 
-Controller tests under `backend/src/test/java/com/cinema/controller/` demonstrate:
+1. Password length 7 → 400 (BVA invalid)  
+2. Invalid email → 400 (EP)  
+3. Password length 8 → 201 (BVA valid boundary)  
+4. Movie duration 0 → 400 (`@Positive`)  
+5. Null `movieId` on license → 400 (`@NotNull`)  
 
-1. Password length 7 → 400 (BVA invalid)
-2. Invalid email → 400 (EP)
-3. Password length 8 → 201 (BVA valid boundary)
-4. Movie duration 0 → 400 (`@Positive`)
-5. Null `movieId` on license → 400 (`@NotNull`)
-
-### Manual API testing
-
-API testing was also performed using Postman for registration, login, JWT authentication, movies, clients, rentals, and licenses.
+Manual API checks were also done with Postman (register, login, JWT, movies, clients, rentals, licenses).
 
 ---
 
-## Continuous Integration
+## How to run the CI pipelines
 
 ### GitHub Actions
 
-Workflow: `.github/workflows/ci.yml`
+- Config: `.github/workflows/ci.yml`  
+- Triggers: push / pull request to `main` (and team feature branches).  
+- Steps: JDK 21 → `mvn -B clean test -Dtest='!CinemaSystemTest'` in `backend/` → upload Surefire + JaCoCo artifacts.  
+- Failed tests fail the workflow (regression gate).  
+- View runs: GitHub → **Actions** tab for this repository.
 
-- Triggers on push / pull request to `main` (and team feature branches).
-- Sets up JDK 21 and runs `mvn -B clean test -Dtest='!CinemaSystemTest'` in `backend/`.
-- Uploads Surefire XML and JaCoCo HTML as artifacts.
-- Failed tests fail the workflow (regression gate).
+### Jenkins
 
-### Jenkins CI
-
-The repository root contains a `Jenkinsfile`.
-
-- Checks out the repo and runs the same Maven suite (Selenium excluded; needs Docker for Testcontainers).
+- Config: root `Jenkinsfile`  
+- Same Maven suite as Actions (Selenium excluded); needs Docker for Testcontainers.  
+- Configure Jenkins tools named `JDK21` and `Maven`, or edit the `tools` block.  
 - Failed tests fail the build; Surefire + JaCoCo are archived.
-- Configure Jenkins tool names `JDK21` and `Maven`, or adjust the `tools` block.
 
 Example Jenkins-in-Docker:
 
@@ -255,47 +236,54 @@ docker run -d --name jenkins-cinema -p 8081:8080 -p 50000:50000 ^
   -v jenkins_home:/var/jenkins_home jenkins/jenkins:lts
 ```
 
-Then create a Pipeline job pointed at this repository and the root `Jenkinsfile`.
+Then create a **Pipeline** job pointed at this repository and the root `Jenkinsfile`.
 
 ### Regression demonstration
 
-1. Temporarily change a known assertion (e.g. expect HTTP 401 instead of 403 on a security test).
-2. Push or run the pipeline → build **fails**.
-3. Restore the assertion → build **passes**.
+1. Temporarily change a known assertion (e.g. expect HTTP 401 instead of 403 on a security test).  
+2. Push or run the pipeline → build **fails**.  
+3. Restore the assertion → build **passes**.  
 
 Do not leave a broken commit on `main`.
 
 ---
 
-## Docker
+## Project structure
 
-The PostgreSQL database runs inside Docker.
-
-Start containers
-
-```bash
-docker compose up -d
+```
+cinema-/
+├── frontend/                 # Next.js UI
+├── backend/                  # Spring Boot API + tests
+│   ├── src/main/
+│   ├── src/test/             # unit, validation, security, Selenium
+│   ├── docker-compose.yml    # PostgreSQL
+│   └── pom.xml
+├── docs/                     # test plan, defects, metrics, summaries
+├── .github/workflows/ci.yml  # GitHub Actions
+├── Jenkinsfile               # Jenkins pipeline
+└── README.md
 ```
 
-Stop containers
+---
+
+## Docker
 
 ```bash
+cd backend
+docker compose up -d
 docker compose down
 ```
 
 ---
 
+## Team Members
 
-
----
-
-## 👨‍💻 Team Members
-
-| Name | Responsibility |
-|------|----------------|
-| Zeru | Entities, Repositories, Services, Docker, Integration, Unit / validation testing, GitHub Actions |
-| Mistre | DTOs, Controllers, Selenium system tests |
-| Hlina | Spring Security, JWT Authentication, Security tests, Jenkins CI |
+| Name | ID | Responsibility |
+|------|----|----------------|
+| Zeru | ATE/0211/14 | Entities, repositories, services, Docker, unit / validation testing, GitHub Actions |
+| Mistre | ATE/2545/14 | DTOs, controllers, Selenium system tests |
+| Hlina | ATE/3417/14 | Spring Security, JWT, security tests, Jenkins CI |
+| Yabsra | ATE/1814/14 | Team member / project support |
 
 ---
 

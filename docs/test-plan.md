@@ -4,6 +4,15 @@
 **Group:** Enterprise-F-Project  
 **Application:** Cinema Distribution System (Spring Boot + Next.js)
 
+## Group members
+
+| Name | Student ID | Primary testing role |
+|------|------------|----------------------|
+| Zerubabel Mesfin | ATE/0211/14 | Services, unit tests, coverage, GitHub Actions |
+| Hlina Girum | ATE/3417/14 | Security, JWT, security integration, Jenkins |
+| Mistre Solomon | ATE/2545/14 | DTOs/controllers, Selenium Page Object system tests |
+| Yabsra Mesfin | ATE/1814/14 | Validation, BVA, EP, controller validation tests |
+
 ## 1. Scope
 
 **In scope:** Authentication/JWT, movies, licenses, rentals, role-based access, API validation, UI journeys for client/distributor rental workflow, CI pipelines.
@@ -49,12 +58,12 @@ Week 1 app + plan/design → Week 2 automation + CI → Week 3 regression demo, 
 
 ## 7. Roles
 
-| Member | Focus |
-|--------|--------|
-| Zeru | Domain services, unit/validation tests, coverage, GitHub Actions |
-| Hlina | Security, JWT, security integration tests, Jenkinsfile |
-| Mistre | Controllers/DTOs, Selenium POM system tests |
-| Yabsra (covered by Zeru) | Validation / BVA / EP contribution |
+| Name | Student ID | Focus |
+|------|------------|--------|
+| Zerubabel Mesfin | ATE/0211/14 | Domain services; unit tests; JaCoCo; GitHub Actions |
+| Hlina Girum | ATE/3417/14 | Spring Security & JWT; security tests; Jenkinsfile |
+| Mistre Solomon | ATE/2545/14 | DTOs/controllers; Selenium POM system tests |
+| Yabsra Mesfin | ATE/1814/14 | Validation, BVA, EP; controller validation tests |
 
 ## 8. UAT / acceptance
 
