@@ -284,6 +284,19 @@ class RentalServiceTest {
     }
 
     @Test
+    void updateStatus_requestedToRequested_throwsBadRequest() {
+        Rental rental = TestDataFactory.requestedRental();
+        when(rentalRepository.findById(300L)).thenReturn(Optional.of(rental));
+        when(securityUtils.getCurrentUser()).thenReturn(clientUser);
+        when(clientRepository.findByEmail(clientUser.getEmail())).thenReturn(Optional.of(clientProfile));
+
+        assertThatThrownBy(() -> rentalService.updateStatus(
+                300L, new UpdateRentalStatusRequest(RentalStatus.REQUESTED)))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessage("Invalid rental status transition from REQUESTED to REQUESTED");
+    }
+
+    @Test
     void updateStatus_whenOtherClient_throwsForbidden() {
         Rental rental = TestDataFactory.requestedRental();
         User otherUser = TestDataFactory.otherClientUser();
@@ -349,6 +362,17 @@ class RentalServiceTest {
 
         assertThat(response.id()).isEqualTo(300L);
         assertThat(response.status()).isEqualTo(RentalStatus.REQUESTED);
+    }
+
+    @Test
+    void findById_whenDistributor_throwsForbidden() {
+        Rental rental = TestDataFactory.requestedRental();
+        when(rentalRepository.findById(300L)).thenReturn(Optional.of(rental));
+        when(securityUtils.getCurrentUser()).thenReturn(TestDataFactory.distributor());
+
+        assertThatThrownBy(() -> rentalService.findById(300L))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessage("You do not have permission to access this rental");
     }
 
     // --- findAll ---

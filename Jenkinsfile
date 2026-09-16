@@ -26,9 +26,10 @@ pipeline {
         stage('Backend Test') {
             steps {
                 dir('backend') {
-                    // Requires Docker available to the Jenkins agent (Docker-in-Docker or mounted socket)
-                    // so Testcontainers can start PostgreSQL for security integration tests.
-                    sh 'mvn -B clean test'
+                    // Requires Docker on the Jenkins agent (socket or DinD) for Testcontainers PostgreSQL.
+                    // CinemaSystemTest (Selenium) is excluded here — it needs frontend :3000 + Chrome.
+                    // Run Selenium locally: mvn -B test -Dtest=CinemaSystemTest -Dselenium.headless=true
+                    sh "mvn -B clean test -Dtest='!CinemaSystemTest'"
                 }
             }
             post {
@@ -45,7 +46,7 @@ pipeline {
             echo 'Backend tests failed. Check Surefire reports and console output.'
         }
         success {
-            echo 'Backend unit + security integration tests passed.'
+            echo 'Backend unit, validation, and security integration tests passed.'
         }
     }
 }

@@ -182,31 +182,45 @@ From the `backend/` directory:
 mvn clean test
 ```
 
-This runs:
+This runs the full pyramid:
 
-- **Unit tests** (Phase 3 core business services — Mockito)
-- **Security integration tests** (Phase 4 — MockMvc + Testcontainers PostgreSQL)
+| Level | Suite | Approx. count |
+|-------|--------|----------------|
+| Unit | Phase 3 service tests (Mockito) | 54+ |
+| Validation | Phase 6 controller Bean Validation (MockMvc) | 5 |
+| Integration / security | Phase 4 MockMvc + Testcontainers PostgreSQL | 19 |
+| System / E2E | Phase 5 Selenium Page Object Model | 3 |
 
-**Requirements for the full suite:**
+**Requirements for the full suite (including Selenium):**
 
 - Java 21
-- Docker Desktop running (needed for Testcontainers in security tests)
+- Docker Desktop running (Testcontainers + app Postgres)
+- Backend on `http://localhost:8080`
+- Frontend on `http://localhost:3000`
+- Google Chrome (Selenium Manager resolves the driver)
 - `backend/src/test/resources/docker-java.properties` sets `api.version=1.44` for Docker Engine 29+
 
-Expected green suite (after Phase 3 + Phase 4): **73 tests**, 0 failures.
+CI pipelines exclude Selenium (no live frontend on the agent). Run Selenium locally:
 
-Coverage report (JaCoCo) is generated at:
+```bash
+mvn -B test -Dtest=CinemaSystemTest -Dselenium.headless=true
+```
+
+Coverage report (JaCoCo):
 
 `backend/target/site/jacoco/index.html`
 
-### Phase 5 Selenium E2E testing
+**Target:** ≥ **90%** branch coverage of core business services (`AuthService`, `RentalService`, `MovieService`, `LicenseService`).
 
-The project includes Selenium Page Object Model tests under `backend/src/test/java/com/cinema/selenium`.
-These tests exercise the browser flows for login, movie creation, license creation, and rental lifecycle transitions.
+### Phase 6 — Validation / BVA / EP
 
-Important environment note:
+Controller tests under `backend/src/test/java/com/cinema/controller/` demonstrate:
 
-Selenium E2E execution was not performed in this environment because Docker, the running frontend application, and a usable Chrome browser session were unavailable. Final E2E execution and verification must be performed on a machine with the complete application stack running.
+1. Password length 7 → 400 (BVA invalid)
+2. Invalid email → 400 (EP)
+3. Password length 8 → 201 (BVA valid boundary)
+4. Movie duration 0 → 400 (`@Positive`)
+5. Null `movieId` on license → 400 (`@NotNull`)
 
 ### Manual API testing
 
@@ -214,16 +228,26 @@ API testing was also performed using Postman for registration, login, JWT authen
 
 ---
 
-## Jenkins CI
+## Continuous Integration
 
-The repository root contains a `Jenkinsfile` for continuous integration.
+### GitHub Actions
 
-- The pipeline checks out the repository and runs `mvn -B clean test` in `backend/`.
-- The Jenkins agent must provide **JDK 21**, **Maven**, and **Docker** (Testcontainers starts PostgreSQL).
-- Failed tests fail the build; Surefire XML and JaCoCo HTML are archived when present.
-- Tool names expected in Jenkins: `JDK21` and `Maven` (configure matching tool installers, or adjust the `tools` block).
+Workflow: `.github/workflows/ci.yml`
 
-Example local Jenkins-in-Docker approach (optional):
+- Triggers on push / pull request to `main` (and team feature branches).
+- Sets up JDK 21 and runs `mvn -B clean test -Dtest='!CinemaSystemTest'` in `backend/`.
+- Uploads Surefire XML and JaCoCo HTML as artifacts.
+- Failed tests fail the workflow (regression gate).
+
+### Jenkins CI
+
+The repository root contains a `Jenkinsfile`.
+
+- Checks out the repo and runs the same Maven suite (Selenium excluded; needs Docker for Testcontainers).
+- Failed tests fail the build; Surefire + JaCoCo are archived.
+- Configure Jenkins tool names `JDK21` and `Maven`, or adjust the `tools` block.
+
+Example Jenkins-in-Docker:
 
 ```bash
 docker run -d --name jenkins-cinema -p 8081:8080 -p 50000:50000 ^
@@ -232,6 +256,14 @@ docker run -d --name jenkins-cinema -p 8081:8080 -p 50000:50000 ^
 ```
 
 Then create a Pipeline job pointed at this repository and the root `Jenkinsfile`.
+
+### Regression demonstration
+
+1. Temporarily change a known assertion (e.g. expect HTTP 401 instead of 403 on a security test).
+2. Push or run the pipeline → build **fails**.
+3. Restore the assertion → build **passes**.
+
+Do not leave a broken commit on `main`.
 
 ---
 
@@ -261,15 +293,15 @@ docker compose down
 
 | Name | Responsibility |
 |------|----------------|
-| Zeru | Entities, Repositories, Services, Docker, Integration, Testing |
-| Mistre | DTOs, Controllers |
+| Zeru | Entities, Repositories, Services, Docker, Integration, Unit / validation testing, GitHub Actions |
+| Mistre | DTOs, Controllers, Selenium system tests |
 | Hlina | Spring Security, JWT Authentication, Security tests, Jenkins CI |
 
 ---
 
 ## 📄 License
 
-This project was developed for educational purposes as part of the Enterprise Application Development course.
+This project was developed for educational purposes as part of the Enterprise Application Development / Software Testing and Validation course.
 
 ---
 

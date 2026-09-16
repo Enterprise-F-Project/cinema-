@@ -157,6 +157,20 @@ class MovieServiceTest {
     }
 
     @Test
+    void update_whenClient_throwsForbidden() {
+        Movie movie = TestDataFactory.availableMovie();
+        when(movieRepository.findById(100L)).thenReturn(Optional.of(movie));
+        when(securityUtils.getCurrentUser()).thenReturn(TestDataFactory.clientUser());
+
+        UpdateMovieRequest request = new UpdateMovieRequest(
+                "Hacked Title", "Action", LocalDate.of(2024, 2, 1), 110, "Nope");
+
+        assertThatThrownBy(() -> movieService.update(100L, request))
+                .isInstanceOf(ForbiddenException.class)
+                .hasMessage("You do not have permission to modify this movie");
+    }
+
+    @Test
     void updateStatus_setsRequestedAvailability() {
         Movie movie = TestDataFactory.availableMovie();
         when(movieRepository.findById(100L)).thenReturn(Optional.of(movie));

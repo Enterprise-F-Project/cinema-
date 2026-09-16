@@ -23,13 +23,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -249,5 +256,57 @@ class LicenseServiceTest {
         assertThatThrownBy(() -> licenseService.findById(999L))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessage("License not found with id: 999");
+    }
+
+    @Test
+    void findById_whenAdmin_returnsLicense() {
+        License license = TestDataFactory.activeLicense();
+        when(licenseRepository.findById(200L)).thenReturn(Optional.of(license));
+        when(securityUtils.getCurrentUser()).thenReturn(TestDataFactory.admin());
+
+        LicenseResponse response = licenseService.findById(200L);
+
+        assertThat(response.id()).isEqualTo(200L);
+        assertThat(response.status()).isEqualTo(LicenseStatus.ACTIVE);
+        assertThat(response.movieId()).isEqualTo(100L);
+    }
+
+    @Test
+    void findById_whenOwningDistributor_returnsLicense() {
+        License license = TestDataFactory.activeLicense();
+        when(licenseRepository.findById(200L)).thenReturn(Optional.of(license));
+        when(securityUtils.getCurrentUser()).thenReturn(distributor);
+
+        LicenseResponse response = licenseService.findById(200L);
+
+        assertThat(response.id()).isEqualTo(200L);
+        assertThat(response.distributorId()).isEqualTo(distributor.getId());
+    }
+
+    @Test
+    void findAll_whenDistributor_scopesToOwnId() {
+        when(securityUtils.getCurrentUser()).thenReturn(distributor);
+        Pageable pageable = PageRequest.of(0, 10);
+        License license = TestDataFactory.activeLicense();
+        when(licenseRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(List.of(license), pageable, 1));
+
+        Page<LicenseResponse> page = licenseService.findAll(null, null, null, null, null, pageable);
+
+        assertThat(page.getContent()).hasSize(1);
+        assertThat(page.getContent().getFirst().id()).isEqualTo(200L);
+        verify(licenseRepository).findAll(any(Specification.class), eq(pageable));
+    }
+
+    @Test
+    void findAll_whenAdmin_doesNotScopeToDistributor() {
+        when(securityUtils.getCurrentUser()).thenReturn(TestDataFactory.admin());
+        Pageable pageable = PageRequest.of(0, 10);
+        when(licenseRepository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(Page.empty(pageable));
+
+        licenseService.findAll(LicenseStatus.ACTIVE, 100L, 10L, startDate, endDate, pageable);
+
+        verify(licenseRepository).findAll(any(Specification.class), eq(pageable));
     }
 }
